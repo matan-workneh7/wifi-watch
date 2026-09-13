@@ -118,7 +118,7 @@ kill_speedtest() {
 start_speedtest() {
   kill_speedtest
   setsid bash -c '
-    raw=$({ timeout 30 omarchy network speedtest down 2>/dev/null; } | sort -g | tail -1)
+    raw=$({ timeout 30 omarchy network speedtest down 2>/dev/null; } | tail -n +2 | sort -g | tail -1)
     [[ -n ${raw:-} ]] || exit 0
     if [[ -s /tmp/wifi-speed-id.txt ]]; then
       sid=$(cat /tmp/wifi-speed-id.txt 2>/dev/null || echo 0)

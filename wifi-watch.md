@@ -135,7 +135,7 @@ On recovery, `start_speedtest` runs, in one go:
 
 1. **Kill** any previous speed test still running (there shouldn't be one, but there may be if the network died mid-test and the kill raced recovery).
 2. **Launch** `setsid bash -c '…' &` in the background — `setsid` puts it in its **own process group**, which is what lets the monitor kill the *whole* test later with one signal.
-3. Inside, run: `timeout 30 omarchy network speedtest down`, then pipe everything through `sort -g | tail -1` — `omarchy network speedtest` streams one **Mbps sample per second**, so sorting numerically and taking the last line yields the **peak download speed**.
+3. Inside, run: `timeout 30 omarchy network speedtest down`, then `tail -n +2` to drop the tool's **one-time initialization line** (a spurious value printed before sampling starts — `17` on one machine, but it changes), then pipe the remaining per-second samples through `sort -g | tail -1`. `omarchy network speedtest` streams one **Mbps sample per second**, so sorting numerically and taking the last line yields the **peak download speed** — the honest peak of the real samples, not the header artifact.
 4. Post the result as the `WiFi speed` toast; store its returned ID in `/tmp/wifi-speed-id.txt` so the next speed toast replaces it in place.
 5. Guard rails: `timeout 30` caps even the slowest test at 30 s; an empty result exits silently (no toast); the whole job's output is discarded.
 
@@ -488,7 +488,7 @@ kill_speedtest() {
 start_speedtest() {
   kill_speedtest
   setsid bash -c '
-    raw=$({ timeout 30 omarchy network speedtest down 2>/dev/null; } | sort -g | tail -1)
+    raw=$({ timeout 30 omarchy network speedtest down 2>/dev/null; } | tail -n +2 | sort -g | tail -1)
     [[ -n ${raw:-} ]] || exit 0
     if [[ -s /tmp/wifi-speed-id.txt ]]; then
       sid=$(cat /tmp/wifi-speed-id.txt 2>/dev/null || echo 0)
