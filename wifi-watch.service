@@ -1,0 +1,12 @@
+[Unit]
+Description=WiFi link monitor with in-place Omarchy notifications
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.config/omarchy/scripts/wifi-watch.sh 1.1.1.1
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target
